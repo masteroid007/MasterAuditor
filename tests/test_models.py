@@ -1,6 +1,6 @@
 from pathlib import Path 
 
-from pysecure.core.models import Finding, ScanResult, Severity
+from mauditor.core.models import Finding, ScanResult, Severity
 
 def test_finding_creation():
     finding = Finding(

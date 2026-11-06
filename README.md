@@ -1,5 +1,5 @@
 
-# PySecure
+# MasterAuditor
 
 A modular command-line security auditing tool for Python projects.
 
@@ -20,8 +20,8 @@ A modular command-line security auditing tool for Python projects.
 Clone the repository:
 
 ```bash
-git clone https://github.com/masteroid007/PySecure.git
-cd PySecure
+git clone https://github.com/masteroid007/Master-Auditor.git
+cd Master-Auditor
 ```
 
 Create a virtual environment:
@@ -39,9 +39,9 @@ python -m pip install -e ".[dev]"
 ## Usage
 
 ```bash
-pysecure --help
-pysecure --version
-pysecure ./my-project
+maudit --help
+maudit --version
+maudit ./my-project
 ```
 
 ## Development

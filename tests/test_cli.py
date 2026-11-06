@@ -2,13 +2,13 @@ import sys
 
 import pytest
 
-from pysecure.cli.arguments import main
+from mauditor.cli.arguments import main
 
 def test_valid_directory(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["pysecure", str(tmp_path)]
+        ["mauditor", str(tmp_path)]
     )
 
     exit_code = main()
@@ -24,7 +24,7 @@ def test_nonexistent_directory(monkeypatch, tmp_path):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["pysecure", str(target)]
+        ["mauditor", str(target)]
     )
 
     with pytest.raises(SystemExit) as error:
@@ -39,7 +39,7 @@ def test_file_instead_of_directory(monkeypatch, tmp_path):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["pysecure", str(target)]
+        ["mauditor", str(target)]
     )
 
     with pytest.raises(SystemExit) as error:

@@ -2,12 +2,12 @@
 import argparse
 from pathlib import Path
 
-from pysecure import __version__
+from mauditor import __version__
 
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pysecure",
+        prog="mauditor",
         description="A Python security auditing tool."
     )
 
@@ -38,7 +38,7 @@ def main() -> int:
     if not target.is_dir():
         parser.error(f"Target is not a directory: {target}")
 
-    print(f"PySecure v{__version__}")
+    print(f"Mauditor v{__version__}")
     print(f"Target: {target.resolve()}")
     print("Target directory validated successfully.")
 
