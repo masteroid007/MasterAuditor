@@ -1,8 +1,8 @@
-
 import argparse
 from pathlib import Path
 
 from mauditor import __version__
+from mauditor.core.scanner import scan_directory
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -41,5 +41,7 @@ def main() -> int:
     print(f"Mauditor v{__version__}")
     print(f"Target: {target.resolve()}")
     print("Target directory validated successfully.")
+
+    files = scan_directory(target)
 
     return 0
