@@ -25,3 +25,5 @@ htmlcov/
 
 # Generated reports
 reports/
+
+prova.py
