@@ -1,6 +1,8 @@
 from pathlib import Path
 import ast
 
+from mauditor.core.visitors import CallVisitor, FunctionVisitor
+
 def analyze_file(file_path: Path):
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
@@ -26,28 +28,27 @@ def parse_file(content):
 def inspect_ast(files):
     all_results = {}
     for file, tree in files.items():
-        results = {
-        "functions": 0,
-        "classes": 0,
-        "calls": 0,
-        "imports": 0,
-        "import_from": 0,
-        "others": 0
-        }
+        results = {}
         if tree is not None:
+            visitorCall = CallVisitor()
+            visitorFunction = FunctionVisitor()
+            visitorFunction.visit(tree)
+            visitorCall.visit(tree)
             for node in ast.walk(tree):
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     results["functions"] += 1
                 elif isinstance(node, ast.ClassDef):
                     results["classes"] += 1
-                elif isinstance(node, ast.Call):
-                    results["calls"] += 1
                 elif isinstance(node, ast.Import):
                     results["imports"] += 1
                 elif isinstance(node, ast.ImportFrom):
                     results["import_from"] += 1
                 else:
                     results["others"] += 1
+            results["calls"] = len(visitorCall.calls)
+            results["functions"] = len(visitorFunction.functions)
+            results["info_functions"] = visitorFunction.functions
+            results["info_calls"] = visitorCall.calls
             all_results[file] = results
         else:
             all_results[file] = {"status": "not_analyzed", "reason": "SyntaxError"}
