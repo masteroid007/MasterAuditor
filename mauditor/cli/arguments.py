@@ -8,7 +8,7 @@ from mauditor.core.scanner import scan_directory
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mauditor",
-        description="A Python security auditing tool."
+        description="Master Auditor \n\nA Python security auditing tool"
     )
 
     parser.add_argument(
