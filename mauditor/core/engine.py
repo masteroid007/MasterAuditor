@@ -32,7 +32,7 @@ def parse_file(content):
     try:
         return ast.parse(content), None
     except SyntaxError as e:
-         return None, f"Syntax error: {e}"
+        return None, f"Syntax error: {e}"
     except ValueError as e:
         return None, f"Value error: {e}"
 
