@@ -40,6 +40,3 @@ class DataAnalysis:
     info_classes: list[dict] = field(default_factory=list)
     info_imports: list[dict] = field(default_factory=list)
     info_import_from: list[dict] = field(default_factory=list)
-
-
-
