@@ -1,7 +1,7 @@
 from pathlib import Path
 import ast
 
-from mauditor.core.visitors import CallVisitor, FunctionVisitor
+from mauditor.core.visitors import CallVisitor, FunctionVisitor, VariableVisitor, ClassVisitor, ImportVisitor, ImportFromVisitor
 
 def analyze_file(file_path: Path):
         with open(file_path, "r", encoding="utf-8") as file:
@@ -9,9 +9,9 @@ def analyze_file(file_path: Path):
 
         return parse_file(content)
 
-def analyze_files(dir_list):
+def analyze_files(file_paths):
     contents = {}
-    for file in dir_list:
+    for file in file_paths:
         analyzed_file = analyze_file(file)
         contents[file] = analyzed_file
 
@@ -30,25 +30,24 @@ def inspect_ast(files):
     for file, tree in files.items():
         results = {}
         if tree is not None:
-            visitorCall = CallVisitor()
-            visitorFunction = FunctionVisitor()
-            visitorFunction.visit(tree)
-            visitorCall.visit(tree)
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    results["functions"] += 1
-                elif isinstance(node, ast.ClassDef):
-                    results["classes"] += 1
-                elif isinstance(node, ast.Import):
-                    results["imports"] += 1
-                elif isinstance(node, ast.ImportFrom):
-                    results["import_from"] += 1
-                else:
-                    results["others"] += 1
-            results["calls"] = len(visitorCall.calls)
-            results["functions"] = len(visitorFunction.functions)
-            results["info_functions"] = visitorFunction.functions
-            results["info_calls"] = visitorCall.calls
+
+            call_visitor = CallVisitor()
+            function_visitor = FunctionVisitor()
+            variable_visitor = VariableVisitor()
+            class_visitor = ClassVisitor()
+            import_visitor = ImportVisitor()
+            import_from_visitor = ImportFromVisitor()
+
+            function_visitor.visit(tree)
+            call_visitor.visit(tree)
+            variable_visitor.visit(tree)
+            class_visitor.visit(tree)
+            import_visitor.visit(tree)
+            import_from_visitor.visit(tree)
+
+            results["variables"], results["calls"], results["functions"], results["classes"], results["imports"], results["import_from"] = len(variable_visitor.variables), len(call_visitor.calls), len(function_visitor.functions), len(class_visitor.classes), len(import_visitor.imports), len(import_from_visitor.imports_from)
+
+            results["info_variables"], results["info_calls"], results["info_functions"], results["info_classes"], results["info_imports"], results["info_import_from"] = variable_visitor.variables, call_visitor.calls, function_visitor.functions, class_visitor.classes, import_visitor.imports, import_from_visitor.imports_from
             all_results[file] = results
         else:
             all_results[file] = {"status": "not_analyzed", "reason": "SyntaxError"}

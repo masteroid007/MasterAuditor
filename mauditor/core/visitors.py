@@ -96,3 +96,109 @@ class FunctionVisitor(ast.NodeVisitor):
     def visit_AsyncFunctionDef(self, node):
         self.extract_function(node, True)
         self.generic_visit(node)
+
+class ImportVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.imports = []
+
+    def visit_Import(self, node):
+        for alias in node.names:
+            self.imports.append({
+                "module": alias.name,
+                "asname": alias.asname,
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+class ImportFromVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.imports_from = []
+
+    def visit_ImportFrom(self, node):
+        for alias in node.names:
+            self.imports_from.append({
+                "module": node.module,
+                "name": alias.name,
+                "asname": alias.asname,
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+class ClassVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.classes = []
+
+    def visit_ClassDef(self, node):
+        self.classes.append({
+            "name": node.name,
+            "bases": [ast.unparse(base) for base in node.bases],
+            "keywords": [{key.arg: ast.unparse(key.value)} for key in node.keywords],
+            "body": {
+                "unparsed": ast.unparse(node.body),
+                "nodes": node.body
+            },
+            "decorators": [ast.unparse(decorator) for decorator in node.decorator_list],
+            "start_line": node.lineno,
+            "finish_line": node.end_lineno
+        })
+        self.generic_visit(node)
+
+class VariableVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.variables = []
+
+    def visit_AnnAssign(self, node):
+        if isinstance(node.target, ast.Name):
+            self.variables.append({
+                "name": node.target.id,
+                "annotation": ast.unparse(node.annotation),
+                "value": ast.unparse(node.value) if node.value else None,
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+    def visit_AugAssign(self, node):
+        if isinstance(node.target, ast.Name):
+            self.variables.append({
+                "name": node.target.id,
+                "operation": type(node.op).__name__,
+                "value": ast.unparse(node.value),
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+    def visit_Global(self, node):
+        for name in node.names:
+            self.variables.append({
+                "name": name,
+                "type": "global",
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+    def visit_Nonlocal(self, node):
+        for name in node.names:
+            self.variables.append({
+                "name": name,
+                "type": "nonlocal",
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+    def visit_Attribute(self, node):
+        if isinstance(node.value, ast.Name):
+            self.variables.append({
+                "name": f"{node.value.id}.{node.attr}",
+                "line": node.lineno
+            })
+        self.generic_visit(node)
+
+    def visit_Assign(self, node):
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                self.variables.append({
+                    "name": target.id,
+                    "value": ast.unparse(node.value),
+                    "line": node.lineno
+                })
+        self.generic_visit(node)
