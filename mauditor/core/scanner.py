@@ -8,4 +8,4 @@ def scan_directory(target):
                 print (root+'/'+str(file))
                 files_dir.append(root+"/"+str(file))
 
-    return files
+    return files_dir
