@@ -35,6 +35,15 @@ def _has_keyword_argument(args, keyword: str, expected_value=None) -> bool:
             return False
         return expected_value is None or args[keyword] == expected_value
 
+    if isinstance(args, list):
+        for item in args:
+            if not isinstance(item, dict) or keyword not in item:
+                continue
+            value = item[keyword]
+            if expected_value is None or value == str(expected_value):
+                return True
+        return False
+
     arguments = str(args)
     if expected_value is None:
         return re.search(rf"\b{re.escape(keyword)}\s*=", arguments) is not None
@@ -42,3 +51,25 @@ def _has_keyword_argument(args, keyword: str, expected_value=None) -> bool:
         rf"\b{re.escape(keyword)}\s*=\s*{re.escape(str(expected_value))}\b",
         arguments,
     ) is not None
+
+
+def _keyword_arguments(call) -> dict[str, str]:
+    """Return keyword arguments from a recorded call."""
+    keywords = call.get("keywords", [])
+    if isinstance(keywords, dict):
+        return {str(key): str(value) for key, value in keywords.items()}
+    if isinstance(keywords, list):
+        result = {}
+        for item in keywords:
+            if isinstance(item, dict):
+                result.update({str(key): str(value) for key, value in item.items()})
+        return result
+    return {}
+
+
+def _is_string_literal(value) -> bool:
+    """Return whether a recorded expression is a non-empty string literal."""
+    expression = str(value).strip()
+    if len(expression) < 2 or expression[0] in "fF":
+        return False
+    return expression[0] in "'\"" and expression[-1] == expression[0]

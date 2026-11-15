@@ -1,4 +1,10 @@
-from mauditor.core.rules import BaseRule, _call_name, _has_keyword_argument
+from ..base import (
+    BaseRule,
+    _call_name,
+    _has_keyword_argument,
+    _is_string_literal,
+    _keyword_arguments,
+)
 from mauditor.core.models import DataAnalysis
 from mauditor.core.models import Finding, Severity
 
@@ -84,7 +90,7 @@ class SubprocessShellRule(BaseRule):
                     "check_call",
                     "check_output",
                 }
-                and _has_keyword_argument(call.get("args", ""), "shell", True)
+                and _has_keyword_argument(call.get("keywords", []), "shell", True)
             ):
                 findings.append(Finding(
                     rule_id=self.rule_id,
@@ -127,7 +133,16 @@ class CommandInjectionRule(BaseRule):
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         findings = []
         for call in data_analysis.info_calls:
-            if _call_name(call) in ["eval", "exec", "compile", "Popen", "system"]:
+            if _call_name(call) == "system" or (
+                _call_name(call) in {
+                    "Popen",
+                    "run",
+                    "call",
+                    "check_call",
+                    "check_output",
+                }
+                and _has_keyword_argument(call.get("keywords", []), "shell", True)
+            ):
                 findings.append(Finding(
                     rule_id=self.rule_id,
                     message=self.description,
@@ -148,7 +163,7 @@ class SqlInjectionRule(BaseRule):
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         findings = []
         for call in data_analysis.info_calls:
-            if _call_name(call) in ["execute", "executemany"]:
+            if _call_name(call) in ["execute", "executemany"] and self._is_unsafe(call):
                 findings.append(Finding(
                     rule_id=self.rule_id,
                     message=self.description,
@@ -157,6 +172,17 @@ class SqlInjectionRule(BaseRule):
                     severity=self.severity
                 ))
         return findings
+
+    @staticmethod
+    def _is_unsafe(call) -> bool:
+        args = call.get("args", [])
+        keywords = _keyword_arguments(call)
+        if not args:
+            return False
+        if len(args) > 1 or any(key in keywords for key in ("params", "parameters")):
+            return False
+        query = str(args[0]).strip()
+        return not _is_string_literal(query)
 
 class DynamicImportRule(BaseRule):
     def __init__(self):
@@ -214,7 +240,7 @@ class UnsafeYamlLoadRule(BaseRule):
             if (
                 _call_name(call) == "load"
                 and "yaml" in str(call.get("name", ""))
-                and not _has_keyword_argument(call.get("args", ""), "Loader")
+                and not _has_keyword_argument(call.get("keywords", []), "Loader")
             ):
                 findings.append(Finding(
                     rule_id=self.rule_id,
