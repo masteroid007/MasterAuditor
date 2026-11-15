@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import re
 
 from mauditor.core.models import DataAnalysis
 from mauditor.core.models import Finding, Severity
@@ -22,23 +23,22 @@ class BaseRule(ABC):
         """
         pass
 
-class EvalRule(BaseRule):
-    def __init__(self):
-        super().__init__(
-            rule_id="SEC001",
-            description="Uso della funzione eval() rilevato.",
-            severity=Severity.HIGH
-        )
+def _call_name(call) -> str:
+    """Return the unqualified name of a recorded call."""
+    return str(call.get("name", "")).rsplit(".", 1)[-1]
 
-    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
-        findings = []
-        for call in data_analysis.info_calls:
-            if call["name"].split(".")[-1] == "eval":
-                findings.append(Finding(
-                    rule_id=self.rule_id,
-                    message=self.description,
-                    file_path=data_analysis.file_path,
-                    line=call["line"],
-                    severity=self.severity
-                ))
-        return findings
+
+def _has_keyword_argument(args, keyword: str, expected_value=None) -> bool:
+    """Return whether call arguments contain the requested keyword/value."""
+    if isinstance(args, dict):
+        if keyword not in args:
+            return False
+        return expected_value is None or args[keyword] == expected_value
+
+    arguments = str(args)
+    if expected_value is None:
+        return re.search(rf"\b{re.escape(keyword)}\s*=", arguments) is not None
+    return re.search(
+        rf"\b{re.escape(keyword)}\s*=\s*{re.escape(str(expected_value))}\b",
+        arguments,
+    ) is not None
