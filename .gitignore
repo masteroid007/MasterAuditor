@@ -29,3 +29,5 @@ reports/
 prova.py
 
 to-do.md
+
+.tests/
