@@ -1,4 +1,3 @@
-
 import argparse
 from collections import Counter
 from pathlib import Path
@@ -7,25 +6,40 @@ from colored_print import log
 
 from mauditor import __version__
 from mauditor.core.auditor import Auditor
-from mauditor.core.models import Severity
+from mauditor.core.models import Finding, Severity
 
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="mauditor",
-        description="Master Auditor\n\nA Python security auditing tool",
+        prog="maudit",
+        description=(
+            "Mauditor - Python Security Auditor\n\n"
+            "A static analysis tool designed to identify potential "
+            "security vulnerabilities in Python projects."
+        ),
+        epilog=(
+            "Examples:\n"
+            "  maudit ./my-project\n"
+            "  maudit /path/to/project\n"
+            "  maudit --version\n\n"
+            "Project:\n"
+            "  https://github.com/masteroid007/MasterAuditor"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
         "target",
         type=Path,
-        help="Path of the Python project to analyze.",
+        metavar="TARGET",
+        help="Path to the Python project to analyze.",
     )
 
     parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
+        help="Show the program's version number and exit.",
     )
 
     return parser
@@ -41,7 +55,7 @@ def print_header(target: Path) -> None:
     log.success("\nStarting security analysis...\n")
 
 
-def print_finding(index: int, finding) -> None:
+def print_finding(index: int, finding: Finding) -> None:
     log("-" * 60)
 
     log.info(f"Finding #{index}")
@@ -58,13 +72,11 @@ def print_finding(index: int, finding) -> None:
         log.error(severity_message)
     elif severity == Severity.MEDIUM:
         log.warning(severity_message)
-    elif severity == Severity.LOW:
-        log.info(severity_message)
-    elif severity == Severity.INFO:
+    else:
         log.info(severity_message)
 
 
-def print_summary(findings: list) -> None:
+def print_summary(findings: list[Finding]) -> None:
     log("\n" + "=" * 60)
     log.pink("  SCAN SUMMARY")
     log("=" * 60)
@@ -84,8 +96,6 @@ def print_summary(findings: list) -> None:
             log.error(message)
         elif severity == Severity.MEDIUM:
             log.warning(message)
-        elif severity == Severity.LOW:
-            log.info(message)
         else:
             log.info(message)
 
@@ -113,11 +123,8 @@ def main() -> int:
 
     findings = Auditor().run(target)
 
-    if findings:
-        for index, finding in enumerate(findings, start=1):
-            print_finding(index, finding)
-    else:
-        log.success("\nNo security findings detected.")
+    for index, finding in enumerate(findings, start=1):
+        print_finding(index, finding)
 
     print_summary(findings)
 
