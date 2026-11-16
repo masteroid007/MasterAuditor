@@ -12,7 +12,7 @@ class EvalRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC001",
-            description="Uso della funzione eval() rilevato.",
+            description="Use of the eval() function detected.",
             severity=Severity.HIGH
         )
 
@@ -33,7 +33,7 @@ class ExecRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC002",
-            description="Uso della funzione exec() rilevato.",
+            description="Use of the exec() function detected.",
             severity=Severity.HIGH
         )
 
@@ -54,7 +54,7 @@ class CompileRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC003",
-            description="Uso della funzione compile() rilevato.",
+            description="Use of the compile() function detected.",
             severity=Severity.HIGH
         )
 
@@ -75,7 +75,7 @@ class SubprocessShellRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC004",
-            description="Uso di subprocess con shell=True rilevato.",
+            description="Use of subprocess with shell=True detected.",
             severity=Severity.HIGH
         )
 
@@ -105,7 +105,7 @@ class OsSystemRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC005",
-            description="Uso di os.system() rilevato.",
+            description="Use of os.system() detected.",
             severity=Severity.HIGH
         )
 
@@ -126,7 +126,7 @@ class CommandInjectionRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC006",
-            description="Possibile vulnerabilità di command injection rilevata.",
+            description="Potential command injection vulnerability detected.",
             severity=Severity.CRITICAL
         )
 
@@ -156,7 +156,7 @@ class SqlInjectionRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC007",
-            description="Possibile vulnerabilità di SQL injection rilevata.",
+            description="Potential SQL injection vulnerability detected.",
             severity=Severity.CRITICAL
         )
 
@@ -188,7 +188,7 @@ class DynamicImportRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC008",
-            description="Uso di import dinamico rilevato.",
+            description="Use of dynamic import detected.",
             severity=Severity.HIGH
         )
 
@@ -209,7 +209,7 @@ class PickleRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC009",
-            description="Uso di pickle rilevato.",
+            description="Use of pickle detected.",
             severity=Severity.HIGH
         )
 
@@ -230,7 +230,7 @@ class UnsafeYamlLoadRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC010",
-            description="Uso di yaml.load() senza Loader specificato rilevato.",
+            description="Use of yaml.load() without a specified Loader detected.",
             severity=Severity.HIGH
         )
 

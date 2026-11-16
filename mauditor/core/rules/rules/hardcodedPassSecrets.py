@@ -21,7 +21,7 @@ class HardcodedPasswordRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC011",
-            description="Rilevata password hardcoded.",
+            description="Hardcoded password detected.",
             severity=Severity.HIGH
         )
 
@@ -32,7 +32,7 @@ class HardcodedSecretRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC012",
-            description="Rilevato secret hardcoded.",
+            description="Hardcoded secret detected.",
             severity=Severity.HIGH
         )
 
@@ -43,7 +43,7 @@ class HardcodedTokenRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC013",
-            description="Rilevato token hardcoded.",
+            description="Hardcoded token detected.",
             severity=Severity.HIGH
         )
 
@@ -54,7 +54,7 @@ class HardcodedApiKeyRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC014",
-            description="Rilevata API key hardcoded.",
+            description="Hardcoded API key detected.",
             severity=Severity.HIGH
         )
 
@@ -65,7 +65,7 @@ class HardcodedSecretKeyRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC015",
-            description="Rilevata secret key hardcoded.",
+            description="Hardcoded secret key detected.",
             severity=Severity.HIGH
         )
 
@@ -76,7 +76,7 @@ class HardcodedAccessTokenRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC016",
-            description="Rilevato access token hardcoded.",
+            description="Hardcoded access token detected.",
             severity=Severity.HIGH
         )
 
@@ -87,7 +87,7 @@ class HardcodedRefreshTokenRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC017",
-            description="Rilevato refresh token hardcoded.",
+            description="Hardcoded refresh token detected.",
             severity=Severity.HIGH
         )
 
@@ -98,7 +98,7 @@ class HardcodedClientSecretRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC018",
-            description="Rilevato client secret hardcoded.",
+            description="Hardcoded client secret detected.",
             severity=Severity.HIGH
         )
 
@@ -109,7 +109,7 @@ class HardcodedPrivateKeyRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC019",
-            description="Rilevato private key hardcoded.",
+            description="Hardcoded private key detected.",
             severity=Severity.HIGH
         )
 
@@ -120,7 +120,7 @@ class HardcodedDatabaseCredentialsRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC020",
-            description="Rilevato database credentials hardcoded.",
+            description="Hardcoded database credentials detected.",
             severity=Severity.HIGH
         )
 
@@ -131,7 +131,7 @@ class HardcodedConnectionStringRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC021",
-            description="Rilevato connection string hardcoded.",
+            description="Hardcoded connection string detected.",
             severity=Severity.HIGH
         )
 
