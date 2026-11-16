@@ -45,3 +45,65 @@ class Registry:
     
     def get_all_rules(self) -> dict[str, type[BaseRule]]:
         return dict.copy(self.rules)
+    
+
+    @classmethod
+    def default(cls) -> "Registry":
+        from mauditor.core.rules.rules.codeExecInjectRules import (
+            EvalRule,
+            ExecRule,
+            CompileRule,
+            SubprocessShellRule,
+            OsSystemRule,
+            CommandInjectionRule,
+            SqlInjectionRule,
+            DynamicImportRule,
+            PickleRule,
+            UnsafeYamlLoadRule,
+        )
+
+        from mauditor.core.rules.rules.hardcodedPassSecrets import (
+            HardcodedPasswordRule,
+            HardcodedSecretRule,
+            HardcodedTokenRule,
+            HardcodedApiKeyRule,
+            HardcodedSecretKeyRule,
+            HardcodedAccessTokenRule,
+            HardcodedRefreshTokenRule,
+            HardcodedClientSecretRule,
+            HardcodedPrivateKeyRule,
+            HardcodedDatabaseCredentialsRule,
+            HardcodedConnectionStringRule,
+        )
+
+        registry = cls()
+
+        rules = (
+            EvalRule,
+            ExecRule,
+            CompileRule,
+            SubprocessShellRule,
+            OsSystemRule,
+            CommandInjectionRule,
+            SqlInjectionRule,
+            DynamicImportRule,
+            PickleRule,
+            UnsafeYamlLoadRule,
+            HardcodedPasswordRule,
+            HardcodedSecretRule,
+            HardcodedTokenRule,
+            HardcodedApiKeyRule,
+            HardcodedSecretKeyRule,
+            HardcodedAccessTokenRule,
+            HardcodedRefreshTokenRule,
+            HardcodedClientSecretRule,
+            HardcodedPrivateKeyRule,
+            HardcodedDatabaseCredentialsRule,
+            HardcodedConnectionStringRule,
+        )
+
+        for rule_class in rules:
+            rule = rule_class()
+            registry.register(rule.rule_id, rule_class)
+
+        return registry

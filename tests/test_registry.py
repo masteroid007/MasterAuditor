@@ -154,3 +154,18 @@ def test_get_all_rules_returns_copy():
     rules.clear()
 
     assert registry.get_rule("TEST001") is DummyRule
+
+def test_default_registry():
+    registry = Registry.default()
+
+    assert len(registry.get_all_rules()) == 21
+
+
+def test_default_registry_contains_all_rule_ids():
+    registry = Registry.default()
+
+    rule_ids = set(registry.get_all_rules())
+
+    assert rule_ids == {
+        f"SEC{i:03d}" for i in range(1, 22)
+    }

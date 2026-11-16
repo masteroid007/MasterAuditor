@@ -1,10 +1,28 @@
 from pathlib import Path
 
-from mauditor.core.scanner import scan_directory
 from mauditor.core.engine import analyze_files
+from mauditor.core.models import DataAnalysis, Finding
+from mauditor.core.rules.engine import RulesEngine
+from mauditor.core.rules.registry import Registry
+from mauditor.core.scanner import scan_directory
 
-def analyze_directory(target: Path):
-    files = scan_directory(target)
-    results = analyze_files(files)
+class Auditor:
+    def __init__(self):
+        self.registry = Registry.default()
+        self.rules_engine = RulesEngine(self.registry)
 
-    return results
+    def analyze_directory(self, target: Path) -> list[DataAnalysis]:
+        files = scan_directory(target)
+        results = analyze_files(files)
+
+        return results
+
+    def run(self, target: Path) -> list[Finding]:
+        analyses = self.analyze_directory(target)
+
+        findings: list[Finding] = []
+
+        for data_analysis in analyses:
+            findings.extend(self.rules_engine.run(data_analysis))
+
+        return findings
