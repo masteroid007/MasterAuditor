@@ -11,7 +11,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = ["python-colored-print>=1.1.0"]
+dependencies = [
+    "python-colored-print>=1.1.0"
+]
 
 [project.optional-dependencies]
 dev = [

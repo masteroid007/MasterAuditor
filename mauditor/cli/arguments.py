@@ -1,7 +1,6 @@
 import argparse
 from collections import Counter
 from pathlib import Path
-
 from colored_print import log
 
 from mauditor import __version__
