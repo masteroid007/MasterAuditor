@@ -2,6 +2,7 @@ import argparse
 from collections import Counter
 from pathlib import Path
 from colored_print import log
+from time import perf_counter, time
 
 from mauditor import __version__
 from mauditor.core.auditor import Auditor
@@ -75,7 +76,8 @@ def print_finding(index: int, finding: Finding) -> None:
         log.info(severity_message)
 
 
-def print_summary(findings: list[Finding]) -> None:
+
+def print_summary(findings: list[Finding], start_time: float) -> None:
     log("\n" + "=" * 60)
     log.pink("  SCAN SUMMARY")
     log("=" * 60)
@@ -106,7 +108,12 @@ def print_summary(findings: list[Finding]) -> None:
         log.warning(f"Scan completed with {total} finding(s).")
 
 
+    end_time = perf_counter()
+    log.info(f"Scan time: {end_time - start_time:.2f} seconds")
+
+
 def main() -> int:
+    start_time = perf_counter()
     parser = create_parser()
     args = parser.parse_args()
 
@@ -125,6 +132,6 @@ def main() -> int:
     for index, finding in enumerate(findings, start=1):
         print_finding(index, finding)
 
-    print_summary(findings)
+    print_summary(findings, start_time)
 
     return 1 if findings else 0
