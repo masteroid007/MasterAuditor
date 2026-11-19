@@ -49,7 +49,7 @@ class Registry:
 
     @classmethod
     def default(cls) -> "Registry":
-        from mauditor.core.rules.rules.codeExecInjectRules import (
+        from mauditor.core.rules.rules import (
             EvalRule,
             ExecRule,
             CompileRule,
@@ -60,9 +60,6 @@ class Registry:
             DynamicImportRule,
             PickleRule,
             UnsafeYamlLoadRule,
-        )
-
-        from mauditor.core.rules.rules.hardcodedPassSecrets import (
             HardcodedPasswordRule,
             HardcodedSecretRule,
             HardcodedTokenRule,
