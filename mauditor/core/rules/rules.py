@@ -8,6 +8,28 @@ from .base import (
 from mauditor.core.models import DataAnalysis
 from mauditor.core.models import Finding, Severity
 
+
+def _hardcoded_findings(
+    data_analysis: DataAnalysis,
+    rule_id: str,
+    description: str,
+    severity: Severity,
+    names: set[str],
+) -> list[Finding]:
+    findings = []
+    for variable in data_analysis.info_variables:
+        name = str(variable.get("name", "")).lower()
+        value = variable.get("value")
+        if name in names and _is_string_literal(value):
+            findings.append(Finding(rule_id, description, data_analysis.file_path, variable["line"], severity))
+
+    for call in data_analysis.info_calls:
+        for name, value in _keyword_arguments(call).items():
+            if name.lower() in names and _is_string_literal(value):
+                findings.append(Finding(rule_id, description, data_analysis.file_path, call["line"], severity))
+    return findings
+
+
 class EvalRule(BaseRule):
     def __init__(self):
         super().__init__(
@@ -71,12 +93,33 @@ class CompileRule(BaseRule):
                 ))
         return findings
 
-class SubprocessShellRule(BaseRule):
+class OsSystemRule(BaseRule):
     def __init__(self):
         super().__init__(
             rule_id="SEC004",
-            description="Use of subprocess with shell=True detected.",
+            description="Use of os.system() detected.",
             severity=Severity.HIGH
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) == "system" and "os" in str(call.get("name", "")):
+                findings.append(Finding(
+                    rule_id=self.rule_id,
+                    message=self.description,
+                    file_path=data_analysis.file_path,
+                    line=call["line"],
+                    severity=self.severity
+                ))
+        return findings
+
+class CommandInjectionRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC005",
+            description="Potential command injection vulnerability detected.",
+            severity=Severity.CRITICAL
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -101,61 +144,10 @@ class SubprocessShellRule(BaseRule):
                 ))
         return findings
 
-class OsSystemRule(BaseRule):
-    def __init__(self):
-        super().__init__(
-            rule_id="SEC005",
-            description="Use of os.system() detected.",
-            severity=Severity.HIGH
-        )
-
-    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
-        findings = []
-        for call in data_analysis.info_calls:
-            if _call_name(call) == "system":
-                findings.append(Finding(
-                    rule_id=self.rule_id,
-                    message=self.description,
-                    file_path=data_analysis.file_path,
-                    line=call["line"],
-                    severity=self.severity
-                ))
-        return findings
-
-class CommandInjectionRule(BaseRule):
-    def __init__(self):
-        super().__init__(
-            rule_id="SEC006",
-            description="Potential command injection vulnerability detected.",
-            severity=Severity.CRITICAL
-        )
-
-    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
-        findings = []
-        for call in data_analysis.info_calls:
-            if _call_name(call) == "system" or (
-                _call_name(call) in {
-                    "Popen",
-                    "run",
-                    "call",
-                    "check_call",
-                    "check_output",
-                }
-                and _has_keyword_argument(call.get("keywords", []), "shell", True)
-            ):
-                findings.append(Finding(
-                    rule_id=self.rule_id,
-                    message=self.description,
-                    file_path=data_analysis.file_path,
-                    line=call["line"],
-                    severity=self.severity
-                ))
-        return findings
-
 class SqlInjectionRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC007",
+            rule_id="SEC006",
             description="Potential SQL injection vulnerability detected.",
             severity=Severity.CRITICAL
         )
@@ -187,7 +179,7 @@ class SqlInjectionRule(BaseRule):
 class DynamicImportRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC008",
+            rule_id="SEC007",
             description="Use of dynamic import detected.",
             severity=Severity.HIGH
         )
@@ -208,7 +200,7 @@ class DynamicImportRule(BaseRule):
 class PickleRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC009",
+            rule_id="SEC008",
             description="Use of pickle detected.",
             severity=Severity.HIGH
         )
@@ -229,7 +221,7 @@ class PickleRule(BaseRule):
 class UnsafeYamlLoadRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC010",
+            rule_id="SEC009",
             description="Use of yaml.load() without a specified Loader detected.",
             severity=Severity.HIGH
         )
@@ -251,47 +243,36 @@ class UnsafeYamlLoadRule(BaseRule):
                 ))
         return findings
 
-def _hardcoded_findings(data_analysis: DataAnalysis, rule_id: str, description: str, severity: Severity, names: set[str]) -> list[Finding]:
-    findings = []
-    for variable in data_analysis.info_variables:
-        name = str(variable.get("name", "")).lower()
-        value = variable.get("value")
-        if name in names and _is_string_literal(value):
-            findings.append(Finding(rule_id, description, data_analysis.file_path, variable["line"], severity))
-
-    for call in data_analysis.info_calls:
-        for name, value in _keyword_arguments(call).items():
-            if name.lower() in names and _is_string_literal(value):
-                findings.append(Finding(rule_id, description, data_analysis.file_path, call["line"], severity))
-    return findings
-
-
 class HardcodedPasswordRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC011",
+            rule_id="SEC010",
             description="Hardcoded password detected.",
             severity=Severity.HIGH
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
-        return _hardcoded_findings(data_analysis, self.rule_id, self.description, self.severity, {"password", "passwd", "pwd"})
+        return _hardcoded_findings(
+            data_analysis, self.rule_id, self.description, self.severity,
+            {"password", "passwd", "pwd"},
+        )
 
 class HardcodedSecretRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC012",
+            rule_id="SEC011",
             description="Hardcoded secret detected.",
             severity=Severity.HIGH
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(data_analysis, self.rule_id, self.description, self.severity, {"secret"})
-    
+
+
 class HardcodedTokenRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC013",
+            rule_id="SEC012",
             description="Hardcoded token detected.",
             severity=Severity.HIGH
         )
@@ -302,18 +283,19 @@ class HardcodedTokenRule(BaseRule):
 class HardcodedApiKeyRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC014",
+            rule_id="SEC013",
             description="Hardcoded API key detected.",
             severity=Severity.HIGH
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(data_analysis, self.rule_id, self.description, self.severity, {"api_key", "apikey"})
-    
+
+
 class HardcodedSecretKeyRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC015",
+            rule_id="SEC014",
             description="Hardcoded secret key detected.",
             severity=Severity.HIGH
         )
@@ -324,7 +306,7 @@ class HardcodedSecretKeyRule(BaseRule):
 class HardcodedAccessTokenRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC016",
+            rule_id="SEC015",
             description="Hardcoded access token detected.",
             severity=Severity.HIGH
         )
@@ -335,7 +317,7 @@ class HardcodedAccessTokenRule(BaseRule):
 class HardcodedRefreshTokenRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC017",
+            rule_id="SEC016",
             description="Hardcoded refresh token detected.",
             severity=Severity.HIGH
         )
@@ -346,7 +328,7 @@ class HardcodedRefreshTokenRule(BaseRule):
 class HardcodedClientSecretRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC018",
+            rule_id="SEC017",
             description="Hardcoded client secret detected.",
             severity=Severity.HIGH
         )
@@ -357,7 +339,7 @@ class HardcodedClientSecretRule(BaseRule):
 class HardcodedPrivateKeyRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC019",
+            rule_id="SEC018",
             description="Hardcoded private key detected.",
             severity=Severity.HIGH
         )
@@ -368,7 +350,7 @@ class HardcodedPrivateKeyRule(BaseRule):
 class HardcodedDatabaseCredentialsRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC020",
+            rule_id="SEC019",
             description="Hardcoded database credentials detected.",
             severity=Severity.HIGH
         )
@@ -379,10 +361,194 @@ class HardcodedDatabaseCredentialsRule(BaseRule):
 class HardcodedConnectionStringRule(BaseRule):
     def __init__(self):
         super().__init__(
-            rule_id="SEC021",
+            rule_id="SEC020",
             description="Hardcoded connection string detected.",
             severity=Severity.HIGH
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(data_analysis, self.rule_id, self.description, self.severity, {"connection_string", "connectionstring"})
+
+
+class WeakHashAlgorithmRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC021",
+            description="Use of a weak hash algorithm detected.",
+            severity=Severity.MEDIUM
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"md5", "sha1", "DES", "3DES"}:
+                findings.append(Finding(
+                    rule_id=self.rule_id,
+                    message=self.description,
+                    file_path=data_analysis.file_path,
+                    line=call["line"],
+                    severity=self.severity
+                ))
+        return findings
+
+class InsecureRandomRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC022",
+            description="Use of an insecure random number generator detected.",
+            severity=Severity.MEDIUM
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"random", "randint", "randrange"} and "random" in str(call.get("name", "")):
+                findings.append(Finding(
+                    rule_id=self.rule_id,
+                    message=self.description,
+                    file_path=data_analysis.file_path,
+                    line=call["line"],
+                    severity=self.severity
+                ))
+        return findings
+
+class WeakPasswordHashRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC023",
+            description="Use of a weak password hashing for storing passwords detected.",
+            severity=Severity.MEDIUM
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"md5", "sha1"} and "hashlib" in str(call.get("name", "")):
+                findings.append(Finding(
+                    rule_id=self.rule_id,
+                    message=self.description,
+                    file_path=data_analysis.file_path,
+                    line=call["line"],
+                    severity=self.severity
+                ))
+        return findings
+
+class InsecureTLSRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC024",
+            description="Use of an insecure TLS use in HTTP with verify=False.",
+            severity=Severity.MEDIUM
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"get", "post", "put", "delete"} and "requests" in str(call.get("name", "")):
+                if _has_keyword_argument(call.get("keywords", []), "verify", False):
+                    findings.append(Finding(
+                        rule_id=self.rule_id,
+                        message=self.description,
+                        file_path=data_analysis.file_path,
+                        line=call["line"],
+                        severity=self.severity
+                    ))
+        return findings
+
+class InsecureHTTPRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC025",
+            description="Use of an insecure HTTP URL detected.",
+            severity=Severity.MEDIUM
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"get", "post", "put", "delete"} and "requests" in str(call.get("name", "")):
+                url_arg = call.get("args", [None])[0]
+                if isinstance(url_arg, str) and url_arg.startswith("http://"):
+                    findings.append(Finding(
+                        rule_id=self.rule_id,
+                        message=self.description,
+                        file_path=data_analysis.file_path,
+                        line=call["line"],
+                        severity=self.severity
+                    ))
+        return findings
+
+class SSRFRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC026",
+            description="Potential Server-Side Request Forgery (SSRF) vulnerability detected.",
+            severity=Severity.CRITICAL
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"get", "post", "put", "delete"} and "requests" in str(call.get("name", "")):
+                url_arg = call.get("args", [None])[0]
+                if isinstance(url_arg, str) and self._is_potential_ssrf(url_arg):
+                    findings.append(Finding(
+                        rule_id=self.rule_id,
+                        message=self.description,
+                        file_path=data_analysis.file_path,
+                        line=call["line"],
+                        severity=self.severity
+                    ))
+        return findings
+
+    @staticmethod
+    def _is_potential_ssrf(url: str) -> bool:
+        return url.startswith("http://") or url.startswith("https://")
+    
+class PathTraversalRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC027",
+            description="Potential path traversal vulnerability detected.",
+            severity=Severity.CRITICAL
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"open", "os.path.join"}:
+                for arg in call.get("args", []):
+                    if isinstance(arg, str) and self._is_potential_path_traversal(arg):
+                        findings.append(Finding(
+                            rule_id=self.rule_id,
+                            message=self.description,
+                            file_path=data_analysis.file_path,
+                            line=call["line"],
+                            severity=self.severity
+                        ))
+        return findings
+
+    @staticmethod
+    def _is_potential_path_traversal(path: str) -> bool:
+        return ".." in path or path.startswith("/")
+
+class InsecureTempFileRule(BaseRule):
+    def __init__(self):
+        super().__init__(
+            rule_id="SEC028",
+            description="Use of insecure temporary file creation detected.",
+            severity=Severity.MEDIUM
+        )
+
+    def check(self, data_analysis: DataAnalysis) -> list[Finding]:
+        findings = []
+        for call in data_analysis.info_calls:
+            if _call_name(call) in {"mktemp", "tempfile.mktemp"}:
+                findings.append(Finding(
+                    rule_id=self.rule_id,
+                    message=self.description,
+                    file_path=data_analysis.file_path,
+                    line=call["line"],
+                    severity=self.severity
+                ))
+        return findings
