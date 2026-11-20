@@ -52,8 +52,8 @@ Detects potentially exposed sensitive information, including:
 Clone the repository:
 
 ```bash
-git clone https://github.com/masteroid007/Master-Auditor.git
-cd Master-Auditor
+git clone https://github.com/masteroid007/MasterAuditor.git
+cd MasterAuditor
 ```
 
 Create and activate a virtual environment:
@@ -80,6 +80,12 @@ Check the installed version:
 
 ```bash
 maudit --version
+```
+
+See all the rules available:
+
+```bash
+maudit --rules
 ```
 
 Analyze a Python project:
