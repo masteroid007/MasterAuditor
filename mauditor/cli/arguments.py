@@ -7,6 +7,7 @@ from time import perf_counter, time
 from mauditor import __version__
 from mauditor.core.auditor import Auditor
 from mauditor.core.models import Finding, Severity
+from mauditor.core.rules.registry import Registry
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -21,7 +22,8 @@ def create_parser() -> argparse.ArgumentParser:
             "Examples:\n"
             "  maudit ./my-project\n"
             "  maudit /path/to/project\n"
-            "  maudit --version\n\n"
+            "  maudit --version\n"
+            "  maudit --rules\n\n"
             "Project:\n"
             "  https://github.com/masteroid007/MasterAuditor"
         ),
@@ -32,6 +34,7 @@ def create_parser() -> argparse.ArgumentParser:
         "target",
         type=Path,
         metavar="TARGET",
+        nargs="?",
         help="Path to the Python project to analyze.",
     )
 
@@ -41,9 +44,32 @@ def create_parser() -> argparse.ArgumentParser:
         version=f"%(prog)s {__version__}",
         help="Show the program's version number and exit.",
     )
+    
+    parser.add_argument(
+        "--rules",
+        action="store_true",
+        help="Show available security rules",
+    )
 
     return parser
 
+def print_rules() -> None:
+    registry = Registry.default()
+
+    log.pink("=" * 60)
+    log.pink("  AVAILABLE SECURITY RULES")
+    log.pink("=" * 60)
+
+    for rule_id, rule_class in sorted(
+        registry.get_all_rules().items()
+    ):
+        rule = rule_class()
+        log.info(f"{rule_id:<10} {rule.__class__.__name__}")
+
+    log.pink("=" * 60)
+    log.success(
+        f"Total rules: {len(registry.get_all_rules())}"
+    )
 
 def print_header(target: Path) -> None:
     log.pink("=" * 60)
@@ -116,9 +142,16 @@ def main() -> int:
     start_time = perf_counter()
     parser = create_parser()
     args = parser.parse_args()
+    
+    if args.rules:
+        print_rules()
+        return 0
 
     target = args.target
 
+    if target is None:
+        parser.error("Target path is required. Please specify a directory to analyze.")
+    
     if not target.exists():
         parser.error(f"Target does not exist: {target}")
 

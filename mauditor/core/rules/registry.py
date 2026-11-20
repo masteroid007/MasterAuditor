@@ -43,7 +43,7 @@ class Registry:
 
     @classmethod
     def default(cls) -> "Registry":
-        from mauditor.core.rules.rules import (
+        from .rules import (
             EvalRule,
             ExecRule,
             CompileRule,
