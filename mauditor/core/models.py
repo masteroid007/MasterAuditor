@@ -16,6 +16,8 @@ class Finding:
     file_path: Path
     line: int
     severity: Severity
+    cwe_id: str 
+    category: str
 
 @dataclass
 class ScanResult:

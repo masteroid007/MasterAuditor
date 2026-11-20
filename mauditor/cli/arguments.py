@@ -2,7 +2,7 @@ import argparse
 from collections import Counter
 from pathlib import Path
 from colored_print import log
-from time import perf_counter, time
+from time import perf_counter
 
 from mauditor import __version__
 from mauditor.core.auditor import Auditor
@@ -86,9 +86,11 @@ def print_finding(index: int, finding: Finding) -> None:
 
     log.info(f"Finding #{index}")
     log(f"Rule ID:  {finding.rule_id}")
+    log(f"Category: {finding.category}")
+    log(f"CWE ID:   {finding.cwe_id}")
     log(f"Message:  {finding.message}")
     log(f"Location: {finding.file_path}")
-    log(f"Line: {finding.line}")
+    log(f"Line:     {finding.line}")
 
     severity = finding.severity
     severity_message = f"Severity: {severity.name}"

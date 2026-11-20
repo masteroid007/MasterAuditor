@@ -5,10 +5,12 @@ from mauditor.core.models import DataAnalysis
 from mauditor.core.models import Finding, Severity
 
 class BaseRule(ABC):
-    def __init__(self, rule_id: str, description: str, severity: Severity):
+    def __init__(self, rule_id: str, description: str, severity: Severity, cwe_id: str = "N/A", category: str = "General"):
         self.rule_id = rule_id
         self.description = description
         self.severity = severity
+        self.cwe_id = cwe_id
+        self.category = category
 
     @abstractmethod
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:

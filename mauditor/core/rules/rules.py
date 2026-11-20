@@ -19,6 +19,8 @@ def _make_finding(rule: BaseRule, data_analysis: DataAnalysis, call: dict) -> Fi
         file_path=data_analysis.file_path,
         line=call["line"],
         severity=rule.severity,
+        cwe_id=rule.cwe_id,
+        category=rule.category,
     )
 
 
@@ -28,6 +30,8 @@ def _hardcoded_findings(
     description: str,
     severity: Severity,
     names: set[str],
+    cwe_id: str = "N/A",
+    category: str = "General",
 ) -> list[Finding]:
     findings = []
     for variable in data_analysis.info_variables:
@@ -35,14 +39,14 @@ def _hardcoded_findings(
         value = variable.get("value")
         if name in names and _is_string_literal(value):
             findings.append(
-                Finding(rule_id, description, data_analysis.file_path, variable["line"], severity)
+                Finding(rule_id, description, data_analysis.file_path, variable["line"], severity, cwe_id=cwe_id, category=category)
             )
 
     for call in data_analysis.info_calls:
         for name, value in _keyword_arguments(call).items():
             if name.lower() in names and _is_string_literal(value):
                 findings.append(
-                    Finding(rule_id, description, data_analysis.file_path, call["line"], severity)
+                    Finding(rule_id, description, data_analysis.file_path, call["line"], severity, cwe_id=cwe_id, category=category)
                 )
     return findings
 
@@ -156,7 +160,7 @@ def _is_user_controlled(expression: str, analysis: DataAnalysis) -> bool:
 
 class EvalRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC001", "Use of the eval() function detected.", Severity.HIGH)
+        super().__init__("SEC001", "Use of the eval() function detected.", Severity.HIGH, cwe_id="CWE-95", category="Code Injection")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return [
@@ -168,7 +172,7 @@ class EvalRule(BaseRule):
 
 class ExecRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC002", "Use of the exec() function detected.", Severity.HIGH)
+        super().__init__("SEC002", "Use of the exec() function detected.", Severity.HIGH, cwe_id="CWE-94", category="Code Injection")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return [
@@ -180,7 +184,7 @@ class ExecRule(BaseRule):
 
 class CompileRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC003", "Use of the compile() function detected.", Severity.HIGH)
+        super().__init__("SEC003", "Use of the compile() function detected.", Severity.HIGH, cwe_id="CWE-94", category="Code Injection")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return [
@@ -192,7 +196,7 @@ class CompileRule(BaseRule):
 
 class OsSystemRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC004", "Use of os.system() detected.", Severity.HIGH)
+        super().__init__("SEC004", "Use of os.system() detected.", Severity.HIGH, cwe_id="78", category="Code Injection")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return [
@@ -207,6 +211,8 @@ class CommandInjectionRule(BaseRule):
         super().__init__(
             "SEC005", "Potential command injection: subprocess is called with shell=True.",
             Severity.CRITICAL,
+            cwe_id="CWE-78",
+            category="Code Injection",
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -228,6 +234,8 @@ class SqlInjectionRule(BaseRule):
         super().__init__(
             "SEC006", "Potential SQL injection: query may be built without parameterization.",
             Severity.HIGH,
+            cwe_id="CWE-89",
+            category="SQL Injection",
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -250,7 +258,7 @@ class SqlInjectionRule(BaseRule):
 
 class DynamicImportRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC007", "Use of dynamic __import__() detected.", Severity.HIGH)
+        super().__init__("SEC007", "Use of dynamic __import__() detected.", Severity.HIGH, cwe_id="CWE-470", category="Code Injection")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return [
@@ -264,6 +272,8 @@ class PickleRule(BaseRule):
         super().__init__(
             "SEC008", "Use of pickle deserialization detected; only load trusted data.",
             Severity.HIGH,
+            cwe_id="CWE-502",
+            category="Insecure Deserialization"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -280,6 +290,8 @@ class UnsafeYamlLoadRule(BaseRule):
         super().__init__(
             "SEC009", "Use of yaml.load() without a safe Loader detected.",
             Severity.HIGH,
+            cwe_id="CWE-502",
+            category="Insecure Deserialization"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -294,7 +306,7 @@ class UnsafeYamlLoadRule(BaseRule):
         return findings
 class HardcodedPasswordRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC010", "Hardcoded password detected.", Severity.HIGH)
+        super().__init__("SEC010", "Hardcoded password detected.", Severity.HIGH, cwe_id="CWE-259", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -302,10 +314,9 @@ class HardcodedPasswordRule(BaseRule):
             {"password", "passwd", "pwd"},
         )
 
-
 class HardcodedSecretRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC011", "Hardcoded secret detected.", Severity.HIGH)
+        super().__init__("SEC011", "Hardcoded secret detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -315,7 +326,7 @@ class HardcodedSecretRule(BaseRule):
 
 class HardcodedTokenRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC012", "Hardcoded token detected.", Severity.HIGH)
+        super().__init__("SEC012", "Hardcoded token detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -325,7 +336,7 @@ class HardcodedTokenRule(BaseRule):
 
 class HardcodedApiKeyRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC013", "Hardcoded API key detected.", Severity.HIGH)
+        super().__init__("SEC013", "Hardcoded API key detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -335,7 +346,7 @@ class HardcodedApiKeyRule(BaseRule):
 
 class HardcodedSecretKeyRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC014", "Hardcoded secret key detected.", Severity.HIGH)
+        super().__init__("SEC014", "Hardcoded secret key detected.", Severity.HIGH, cwe_id="CWE-321", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -346,7 +357,7 @@ class HardcodedSecretKeyRule(BaseRule):
 
 class HardcodedAccessTokenRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC015", "Hardcoded access token detected.", Severity.HIGH)
+        super().__init__("SEC015", "Hardcoded access token detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -357,7 +368,7 @@ class HardcodedAccessTokenRule(BaseRule):
 
 class HardcodedRefreshTokenRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC016", "Hardcoded refresh token detected.", Severity.HIGH)
+        super().__init__("SEC016", "Hardcoded refresh token detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -368,7 +379,7 @@ class HardcodedRefreshTokenRule(BaseRule):
 
 class HardcodedClientSecretRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC017", "Hardcoded client secret detected.", Severity.HIGH)
+        super().__init__("SEC017", "Hardcoded client secret detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -379,7 +390,7 @@ class HardcodedClientSecretRule(BaseRule):
 
 class HardcodedPrivateKeyRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC018", "Hardcoded private key detected.", Severity.HIGH)
+        super().__init__("SEC018", "Hardcoded private key detected.", Severity.HIGH, cwe_id="CWE-321", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -390,7 +401,7 @@ class HardcodedPrivateKeyRule(BaseRule):
 
 class HardcodedDatabaseCredentialsRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC019", "Hardcoded database credentials detected.", Severity.HIGH)
+        super().__init__("SEC019", "Hardcoded database credentials detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -401,7 +412,7 @@ class HardcodedDatabaseCredentialsRule(BaseRule):
 
 class HardcodedConnectionStringRule(BaseRule):
     def __init__(self):
-        super().__init__("SEC020", "Hardcoded connection string detected.", Severity.HIGH)
+        super().__init__("SEC020", "Hardcoded connection string detected.", Severity.HIGH, cwe_id="CWE-798", category="Hardcoded Secrets & Credentials")
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
         return _hardcoded_findings(
@@ -415,6 +426,8 @@ class WeakHashAlgorithmRule(BaseRule):
             "SEC021",
             "MD5 or SHA-1 detected; do not use these algorithms for security-sensitive hashing.",
             Severity.MEDIUM,
+            cwe_id="CWE-328",
+            category="Cryptography & Randomness"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -432,6 +445,8 @@ class InsecureRandomRule(BaseRule):
             "SEC022",
             "Python's random module is not suitable for security-sensitive values; use secrets.",
             Severity.MEDIUM,
+            cwe_id="CWE-338",
+            category="Cryptography & Randomness"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -450,6 +465,8 @@ class WeakPasswordHashRule(BaseRule):
             "SEC023",
             "A general-purpose hash appears to be used for password hashing; use Argon2id, scrypt, or PBKDF2.",
             Severity.HIGH,
+            cwe_id="CWE-916",
+            category="Cryptography & Randomness"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -479,6 +496,8 @@ class InsecureTLSRule(BaseRule):
         super().__init__(
             "SEC024", "TLS certificate verification is disabled (verify=False).",
             Severity.HIGH,
+            cwe_id="CWE-295",
+            category="Network Security"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -497,6 +516,8 @@ class InsecureHTTPRule(BaseRule):
         super().__init__(
             "SEC025", "An unencrypted HTTP URL is used in a requests call.",
             Severity.MEDIUM,
+            cwe_id="CWE-319",
+            category="Network Security"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -517,6 +538,8 @@ class SSRFRule(BaseRule):
             "SEC026",
             "A request destination may be derived from user-controlled input; validate and restrict destinations.",
             Severity.HIGH,
+            cwe_id="CWE-918",
+            category="Network Security"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -538,6 +561,8 @@ class PathTraversalRule(BaseRule):
             "SEC027",
             "A file path may contain user-controlled input; validate it and constrain it to the intended directory.",
             Severity.HIGH,
+            cwe_id="CWE-22",
+            category="Filesystem Security"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
@@ -568,6 +593,8 @@ class InsecureTempFileRule(BaseRule):
             "SEC028",
             "tempfile.mktemp() is insecure; use NamedTemporaryFile() or mkstemp() instead.",
             Severity.MEDIUM,
+            cwe_id="CWE-377",
+            category="Filesystem Security"
         )
 
     def check(self, data_analysis: DataAnalysis) -> list[Finding]:
