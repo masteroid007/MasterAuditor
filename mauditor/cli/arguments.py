@@ -80,6 +80,8 @@ def print_header(target: Path) -> None:
     log.info(f"Target:  {target.resolve()}")
     log.success("\nStarting security analysis...\n")
 
+def hyperlink(text: str, url: str) -> str:
+    return f"\033]8;;{{url}}\033\\{text}\033]8;;\033\\"
 
 def print_finding(index: int, finding: Finding) -> None:
     log("-" * 60)
@@ -89,7 +91,7 @@ def print_finding(index: int, finding: Finding) -> None:
     log(f"Category: {finding.category}")
     log(f"CWE ID:   {finding.cwe_id}")
     log(f"Message:  {finding.message}")
-    log(f"Location: {finding.file_path}")
+    log(f"Location: {hyperlink(Path(finding.file_path).as_uri(), finding.file_path)}")
     log(f"Line:     {finding.line}")
 
     severity = finding.severity
