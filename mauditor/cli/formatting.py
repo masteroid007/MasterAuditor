@@ -2,7 +2,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 
-def hyperlink(text: str, file_path: Path, line: int) -> str:
+def hyperlink(text: str, file_path: Path) -> str:
     path = file_path.resolve().as_posix()
     url = f"file:///{quote(path)}"
 

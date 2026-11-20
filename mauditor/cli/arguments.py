@@ -83,10 +83,10 @@ def print_header(target: Path) -> None:
 
 def print_finding(index: int, finding: Finding) -> None:
     location = hyperlink(
-    f"{finding.file_path}:{finding.line}",
-    Path(finding.file_path),
-    finding.line
+    f"{finding.file_path}",
+    Path(finding.file_path)
     )
+    
     log("-" * 60)
 
     log.info(f"Finding #{index}")
