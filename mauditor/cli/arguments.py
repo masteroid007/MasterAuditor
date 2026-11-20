@@ -56,17 +56,17 @@ def create_parser() -> argparse.ArgumentParser:
 def print_rules() -> None:
     registry = Registry.default()
 
-    log.pink("=" * 60)
+    log.pink("=" * 80)
     log.pink("  AVAILABLE SECURITY RULES")
-    log.pink("=" * 60)
+    log.pink("=" * 80)
 
     for rule_id, rule_class in sorted(
         registry.get_all_rules().items()
     ):
         rule = rule_class()
-        log.info(f"{rule_id:<10} {rule.__class__.__name__}")
+        log.info(f"{rule_id:<10} | {rule.__class__.__name__:<40} | Severity: {rule.severity.name:<8}")
 
-    log.pink("=" * 60)
+    log.pink("=" * 80)
     log.success(
         f"Total rules: {len(registry.get_all_rules())}"
     )
@@ -87,7 +87,8 @@ def print_finding(index: int, finding: Finding) -> None:
     log.info(f"Finding #{index}")
     log(f"Rule ID:  {finding.rule_id}")
     log(f"Message:  {finding.message}")
-    log(f"Location: {finding.file_path}:{finding.line}")
+    log(f"Location: {finding.file_path}")
+    log(f"Line: {finding.line}")
 
     severity = finding.severity
     severity_message = f"Severity: {severity.name}"
