@@ -8,6 +8,7 @@ from mauditor import __version__
 from mauditor.core.auditor import Auditor
 from mauditor.core.models import Finding, Severity
 from mauditor.core.rules.registry import Registry
+from mauditor.cli.formatting import hyperlink
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -80,10 +81,12 @@ def print_header(target: Path) -> None:
     log.info(f"Target:  {target.resolve()}")
     log.success("\nStarting security analysis...\n")
 
-def hyperlink(text: str, url: str) -> str:
-    return f"\033]8;;{{url}}\033\\{text}\033]8;;\033\\"
-
 def print_finding(index: int, finding: Finding) -> None:
+    location = hyperlink(
+    f"{finding.file_path}:{finding.line}",
+    Path(finding.file_path),
+    finding.line
+    )
     log("-" * 60)
 
     log.info(f"Finding #{index}")
@@ -91,7 +94,7 @@ def print_finding(index: int, finding: Finding) -> None:
     log(f"Category: {finding.category}")
     log(f"CWE ID:   {finding.cwe_id}")
     log(f"Message:  {finding.message}")
-    log(f"Location: {hyperlink(Path(finding.file_path).as_uri(), finding.file_path)}")
+    log(f"Location: {location}")
     log(f"Line:     {finding.line}")
 
     severity = finding.severity
